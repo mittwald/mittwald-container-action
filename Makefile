@@ -3,7 +3,7 @@ IMAGE_TAG := $(if $(IMAGE_TAG),$(IMAGE_TAG),$(shell git rev-parse --short HEAD))
 
 .PHONY: docker
 docker:
-	docker build -t ${IMAGE_TAG} -f build/package/docker/Dockerfile .
+	docker build -t ${IMAGE_TAG} -f Dockerfile .
 
 .PHONY: dep
 dep:
