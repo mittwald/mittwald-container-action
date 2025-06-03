@@ -31,6 +31,10 @@ func main() {
 
 		os.Exit(1)
 	}
+	if validateErr := stackData.Validate(); validateErr != nil {
+		slog.With(slog.Any("error", validateErr)).Error("❌ invalid stack data")
+	}
+
 	req := containerclientv2.DeclareStackRequest{
 		Body:    *stackData,
 		StackID: stackID,
@@ -129,8 +133,7 @@ func loadYamlRequired(name string) (map[string]interface{}, error) {
 func mustEnv(key string) string {
 	val := os.Getenv(key)
 	if val == "" {
-		slog.With("name", key).Error("❌ Missing required environment variable")
-		os.Exit(1)
+		panic("❌ Missing required environment variable " + key)
 	}
 	return val
 }

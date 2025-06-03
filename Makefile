@@ -25,3 +25,7 @@ lint: dep
     		-e GOLANGCI_ADDITIONAL_YML="/app/build/ci/.golangci.yml" \
     		quay.io/mittwald/golangci-lint:$(GOLANGCI_VERSION) \
         		golangci-lint run -v --fix ./...
+
+.PHONY: test
+test:
+	go test -v -failfast -count=1 ./cmd/...
