@@ -6,14 +6,21 @@ It supports flexible configuration via inline YAML or YAML files, and is compati
 
 ---
 
+> ⚠️ **Disclaimer**  
+> This action is currently under active development.  
+> Features may change and bugs may occur.  
+> We recommend testing in a staging environment before using in production.
+
+---
+
 ## 🔧 What It Does
 
 - Uses the [`mittwald/api-client-go`](https://github.com/mittwald/api-client-go) SDK (v2)
 - Authenticates via API token
 - Calls the `DeclareStack` endpoint to update a container stack
 - Accepts stack configuration via:
-    - a combined `stack.yaml` (with `services` + `volumes`)
-    - separate `services` and `volumes` YAML files or strings
+  - a combined `stack.yaml` (with `services` + `volumes`)
+  - separate `services` and `volumes` YAML files or strings
 
 ---
 
