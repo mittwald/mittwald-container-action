@@ -1,6 +1,6 @@
 # 🐳 mittwald-container-action
 
-This GitHub Action updates a container stack on [mittwald](https://mittwald.de) using the official [mittwald Container API](https://developer.mittwald.de/docs/v2/reference/container) via their [Go SDK](https://github.com/mittwald/api-client-go).
+This GitHub Action updates a container stack on [mittwald. mStudio](https://mittwald.de) using the official [mittwald. Container API](https://developer.mittwald.de/docs/v2/reference/container) via their [Go SDK](https://github.com/mittwald/api-client-go).
 
 It supports flexible configuration via inline YAML or YAML files, and is compatible with complex, multi-service stacks.
 
@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update mittwald container stack
+      - name: Update mittwald. container stack
         uses: mittwald/mittwald-container-action@main
         with:
           api_token: ${{ secrets.MITTWALD_API_TOKEN }}

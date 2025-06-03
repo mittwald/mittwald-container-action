@@ -1,3 +1,7 @@
+name: 'mittwald. mStudio container-action'
+description: 'Update a mStudio container stack using the official API client and a YAML-based configuration'
+author: 'mittwald.'
+
 branding:
   icon: 'grid'
   color: 'blue'
@@ -8,7 +12,7 @@ runs:
 
 inputs:
   api_token:
-    description: 'Mittwald API token'
+    description: 'mStudio API token'
     required: true
   stack_id:
     description: 'Stack ID to update'
