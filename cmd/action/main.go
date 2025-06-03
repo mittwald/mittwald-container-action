@@ -18,36 +18,43 @@ import (
 )
 
 func main() {
+	// Required: Mittwald API token and stack ID must be provided via GitHub Action inputs
 	apiToken := mustEnv("INPUT_API_TOKEN")
 	stackID := mustEnv("INPUT_STACK_ID")
 	ctx := context.Background()
 
+	// Initialize mittwald API client with access token
 	client, createClientErr := mittwaldv2.New(ctx, mittwaldv2.WithAccessToken(apiToken))
 	if createClientErr != nil {
 		slog.With(slog.Any("error", createClientErr)).Error("error creating mittwaldv2 client")
-
 		os.Exit(1)
 	}
 
+	// Load the stack configuration (from file or inline YAML)
 	stackData, loadStackDataErr := loadStackData()
 	if loadStackDataErr != nil {
 		slog.With(slog.Any("error", loadStackDataErr)).Error("❌ failed to load stack data")
-
 		os.Exit(1)
 	}
+
+	// Run type-level validation (SDK-based) on parsed stack config
 	if validateErr := stackData.Validate(); validateErr != nil {
 		slog.With(slog.Any("error", validateErr)).Error("❌ invalid stack data")
+		os.Exit(1)
 	}
 
+	// Construct the API request to declare the stack
 	req := containerclientv2.DeclareStackRequest{
 		Body:    *stackData,
 		StackID: stackID,
 	}
 
-	stackResponse, httpResponse, declareStackErr := client.Container().DeclareStack(ctx, req)
+	// Call the API — this overrides the stack with the full state from YAML
+	_, httpResponse, declareStackErr := client.Container().DeclareStack(ctx, req)
 	if declareStackErr != nil {
 		slog.With(slog.Any("error", declareStackErr)).Error("❌ failure while declaring stack")
 
+		// If available, dump the raw HTTP body for diagnostics
 		plainHttpResponse, plainHttpResponseErr := io.ReadAll(httpResponse.Body)
 		if plainHttpResponseErr == nil {
 			slog.With(slog.Any("response", string(plainHttpResponse))).Error("🔎 http-response")
@@ -56,9 +63,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	slog.With(slog.Any("stackResponse", stackResponse)).Info("✅ Stack updated successfully")
+	slog.Info("✅ Stack updated successfully")
 }
 
+// loadStackData determines whether a full stack definition or a services/volumes split was provided.
+// It then parses the input into a struct that matches the API's expected payload.
 func loadStackData() (*containerclientv2.DeclareStackRequestBody, error) {
 	stack, loadStackErr := loadYamlOptional("STACK")
 	if loadStackErr != nil {
@@ -85,6 +94,7 @@ func loadStackData() (*containerclientv2.DeclareStackRequestBody, error) {
 	)
 }
 
+// parseStackObject marshals and unmarshals YAML-parsed data into a typed SDK struct.
 func parseStackObject(raw map[string]interface{}) (*containerclientv2.DeclareStackRequestBody, error) {
 	data, marshalErr := json.Marshal(raw)
 	if marshalErr != nil {
@@ -99,6 +109,8 @@ func parseStackObject(raw map[string]interface{}) (*containerclientv2.DeclareSta
 	return &stack, nil
 }
 
+// loadYamlOptional attempts to load a YAML config from either a _FILE or _YAML input.
+// If both are missing, it returns nil.
 func loadYamlOptional(name string) (map[string]interface{}, error) {
 	file := os.Getenv("INPUT_" + name + "_FILE")
 	raw := os.Getenv("INPUT_" + name + "_YAML")
@@ -117,16 +129,19 @@ func loadYamlOptional(name string) (map[string]interface{}, error) {
 		return nil, nil
 	}
 
+	// Parse as Go template to allow environment variable substitution (e.g., {{ .Env.MY_VAR }})
 	configTemplate, createTplErr := template.New("").Parse(string(rawInput))
 	if createTplErr != nil {
 		return nil, errors.Wrap(createTplErr, "failure while creating template from input")
 	}
 
+	// Render template using env vars
 	templatedInput, parseTemplateErr := renderConfigTemplate(configTemplate)
 	if parseTemplateErr != nil {
 		return nil, parseTemplateErr
 	}
 
+	// Parse templated YAML into map
 	var parsed map[string]interface{}
 	if unmarshalErr := yaml.Unmarshal(templatedInput.Bytes(), &parsed); unmarshalErr != nil {
 		return nil, errors.Wrap(unmarshalErr, "failure while unmarshalling data")
@@ -135,6 +150,7 @@ func loadYamlOptional(name string) (map[string]interface{}, error) {
 	return parsed, nil
 }
 
+// loadYamlRequired is like loadYamlOptional, but throws an error if no input is found.
 func loadYamlRequired(name string) (map[string]interface{}, error) {
 	data, readDataErr := loadYamlOptional(name)
 	if data == nil && readDataErr == nil {
@@ -144,6 +160,7 @@ func loadYamlRequired(name string) (map[string]interface{}, error) {
 	return data, readDataErr
 }
 
+// mustEnv fetches a required environment variable or exits the process with an error.
 func mustEnv(key string) string {
 	val := os.Getenv(key)
 	if val == "" {
@@ -152,7 +169,8 @@ func mustEnv(key string) string {
 	return val
 }
 
-// RenderConfigs fills templated configs with environment variables
+// renderConfigTemplate renders a Go text/template using environment variables as input.
+// Template variables can be accessed using {{ .Env.VARNAME }} syntax.
 func renderConfigTemplate(configTemplate *template.Template) (*bytes.Buffer, error) {
 	type templateData struct {
 		Env map[string]string
@@ -162,6 +180,7 @@ func renderConfigTemplate(configTemplate *template.Template) (*bytes.Buffer, err
 		Env: make(map[string]string),
 	}
 
+	// Collect all environment variables as key-value pairs
 	for _, env := range os.Environ() {
 		e := strings.SplitN(env, "=", 2)
 		if len(e) > 1 {
@@ -169,6 +188,7 @@ func renderConfigTemplate(configTemplate *template.Template) (*bytes.Buffer, err
 		}
 	}
 
+	// Render the template into a buffer
 	renderedCfg := new(bytes.Buffer)
 	templateErr := configTemplate.Execute(renderedCfg, &data)
 	if templateErr != nil {

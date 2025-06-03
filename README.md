@@ -52,6 +52,11 @@ jobs:
 
       - name: Deploy to Mittwald
         uses: mittwald/mittwald-container-action@main
+        env:
+          MYSQL_ROOT_PASSWORD: "${{ secrets.ROOT_PASS }}"
+          MYSQL_DATABASE: "testdb"
+          MYSQL_USER: "user"
+          MYSQL_PASSWORD: "${{ secrets.USER_PASS }}"
         with:
           api_token: ${{ secrets.MITTWALD_API_TOKEN }}
           stack_id: "your-stack-id"
