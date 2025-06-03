@@ -1,0 +1,12 @@
+with:
+  api_token: ${{ secrets.MITTWALD_API_TOKEN }}
+  stack_id: "stack-abc123"
+  services_yaml: |
+    app:
+      image: "nginx"
+      description: "My web app"
+      ports:
+        - "80:80/tcp"
+  volumes_yaml: |
+    data:
+      name: "mysql-volume"

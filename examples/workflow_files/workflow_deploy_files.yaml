@@ -1,0 +1,5 @@
+with:
+  api_token: ${{ secrets.MITTWALD_API_TOKEN }}
+  stack_id: "stack-abc123"
+  services_file: "./config/services.yaml"
+  volumes_file: "./config/volumes.yaml"

@@ -1,0 +1,35 @@
+branding:
+  icon: 'grid'
+  color: 'blue'
+
+runs:
+  using: 'docker'
+  image: 'build/package/docker/Dockerfile'
+
+inputs:
+  api_token:
+    description: 'Mittwald API token'
+    required: true
+  stack_id:
+    description: 'Stack ID to update'
+    required: true
+
+  stack_yaml:
+    description: 'Multiline YAML containing both services and volumes'
+    required: false
+  stack_file:
+    description: 'Path to stack.yaml file containing both services and volumes'
+    required: false
+
+  services_yaml:
+    description: 'Multiline YAML input for services'
+    required: false
+  services_file:
+    description: 'Path to services.yaml'
+    required: false
+  volumes_yaml:
+    description: 'Multiline YAML input for volumes'
+    required: false
+  volumes_file:
+    description: 'Path to volumes.yaml'
+    required: false

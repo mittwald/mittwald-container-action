@@ -1,0 +1,5 @@
+app:
+  image: "nginx"
+  description: "My web app"
+  ports:
+    - "80:80/tcp"
