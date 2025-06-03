@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"log/slog"
 	"os"
+	"strings"
+	"text/template"
 
 	"github.com/pkg/errors"
 
@@ -82,13 +86,13 @@ func loadStackData() (*containerclientv2.DeclareStackRequestBody, error) {
 }
 
 func parseStackObject(raw map[string]interface{}) (*containerclientv2.DeclareStackRequestBody, error) {
-	data, marshalErr := yaml.Marshal(raw)
+	data, marshalErr := json.Marshal(raw)
 	if marshalErr != nil {
 		return nil, errors.Wrap(marshalErr, "failed to marshal inputs")
 	}
 
 	var stack containerclientv2.DeclareStackRequestBody
-	if unmarshalErr := yaml.Unmarshal(data, &stack); unmarshalErr != nil {
+	if unmarshalErr := json.Unmarshal(data, &stack); unmarshalErr != nil {
 		return nil, errors.Wrap(unmarshalErr, "failure while unmarshalling inputs to declareStackRequestBody")
 	}
 
@@ -99,22 +103,32 @@ func loadYamlOptional(name string) (map[string]interface{}, error) {
 	file := os.Getenv("INPUT_" + name + "_FILE")
 	raw := os.Getenv("INPUT_" + name + "_YAML")
 
-	var bytes []byte
+	var rawInput []byte
 
 	if file != "" {
 		var readFileErr error
-		bytes, readFileErr = os.ReadFile(file)
+		rawInput, readFileErr = os.ReadFile(file)
 		if readFileErr != nil {
 			return nil, errors.Wrap(readFileErr, "failure while reading file "+file)
 		}
 	} else if raw != "" {
-		bytes = []byte(raw)
+		rawInput = []byte(raw)
 	} else {
 		return nil, nil
 	}
 
+	configTemplate, createTplErr := template.New("").Parse(string(rawInput))
+	if createTplErr != nil {
+		return nil, errors.Wrap(createTplErr, "failure while creating template from input")
+	}
+
+	templatedInput, parseTemplateErr := renderConfigTemplate(configTemplate)
+	if parseTemplateErr != nil {
+		return nil, parseTemplateErr
+	}
+
 	var parsed map[string]interface{}
-	if unmarshalErr := yaml.Unmarshal(bytes, &parsed); unmarshalErr != nil {
+	if unmarshalErr := yaml.Unmarshal(templatedInput.Bytes(), &parsed); unmarshalErr != nil {
 		return nil, errors.Wrap(unmarshalErr, "failure while unmarshalling data")
 	}
 
@@ -136,4 +150,30 @@ func mustEnv(key string) string {
 		panic("❌ Missing required environment variable " + key)
 	}
 	return val
+}
+
+// RenderConfigs fills templated configs with environment variables
+func renderConfigTemplate(configTemplate *template.Template) (*bytes.Buffer, error) {
+	type templateData struct {
+		Env map[string]string
+	}
+
+	data := templateData{
+		Env: make(map[string]string),
+	}
+
+	for _, env := range os.Environ() {
+		e := strings.SplitN(env, "=", 2)
+		if len(e) > 1 {
+			data.Env[e[0]] = e[1]
+		}
+	}
+
+	renderedCfg := new(bytes.Buffer)
+	templateErr := configTemplate.Execute(renderedCfg, &data)
+	if templateErr != nil {
+		return nil, errors.Wrap(templateErr, "failure while rendering template")
+	}
+
+	return renderedCfg, nil
 }

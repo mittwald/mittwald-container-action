@@ -9,7 +9,7 @@ ENV         USER_UID="1000" \
             USER_GID="1000" \
             USER_NAME="mittwald-container-action"
 
-RUN         apk add --no-cache --upgrade ca-certificates && \
+RUN         apk add --no-cache ca-certificates && \
             addgroup -g ${USER_GID} ${USER_NAME} && \
             adduser -D -u ${USER_UID} -G "${USER_NAME}" "${USER_NAME}"
 
