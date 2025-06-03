@@ -26,21 +26,21 @@ func main() {
 	// Initialize mittwald API client with access token
 	client, createClientErr := mittwaldv2.New(ctx, mittwaldv2.WithAccessToken(apiToken))
 	if createClientErr != nil {
-		slog.With(slog.Any("error", createClientErr)).Error("error creating mittwaldv2 client")
-		os.Exit(1)
+		slog.Error("error creating mittwaldv2 client")
+		panic(createClientErr)
 	}
 
 	// Load the stack configuration (from file or inline YAML)
 	stackData, loadStackDataErr := loadStackData()
 	if loadStackDataErr != nil {
-		slog.With(slog.Any("error", loadStackDataErr)).Error("❌ failed to load stack data")
-		os.Exit(1)
+		slog.Error("❌ failed to load stack data")
+		panic(loadStackDataErr)
 	}
 
 	// Run type-level validation (SDK-based) on parsed stack config
 	if validateErr := stackData.Validate(); validateErr != nil {
-		slog.With(slog.Any("error", validateErr)).Error("❌ invalid stack data")
-		os.Exit(1)
+		slog.Error("❌ invalid stack data")
+		panic(validateErr)
 	}
 
 	// Construct the API request to declare the stack
@@ -60,7 +60,7 @@ func main() {
 			slog.With(slog.Any("response", string(plainHttpResponse))).Error("🔎 http-response")
 		}
 
-		os.Exit(1)
+		panic(declareStackErr)
 	}
 
 	slog.Info("✅ Stack updated successfully")
