@@ -2,3 +2,4 @@
 !cmd/
 !go.mod
 !go.sum
+!Makefile
