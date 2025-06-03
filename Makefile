@@ -17,7 +17,7 @@ build: dep
 .PHONY: lint
 lint: dep
 	docker run --rm -t \
-    		-v $(shell go env GOPATH):/go \
+    		-v $$(go env GOPATH):/go \
     		-v ${CURDIR}:/app \
     		-v $(HOME)/.cache:/home/mittwald-golangci/.cache \
     		-w /app \
