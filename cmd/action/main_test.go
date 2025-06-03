@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"text/template"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -14,6 +15,48 @@ type StackActionTestSuite struct {
 
 func (s *StackActionTestSuite) SetupTest() {
 	os.Clearenv()
+}
+
+func (s *StackActionTestSuite) TestRenderConfigTemplate_EnvReplacement() {
+	os.Setenv("FOO", "bar")
+
+	tplStr := `value: {{ .Env.FOO }}`
+	tpl, err := template.New("test").Parse(tplStr)
+	s.Require().NoError(err)
+
+	out, err := renderConfigTemplate(tpl)
+	s.Require().NoError(err)
+
+	s.Equal("value: bar", out.String())
+}
+
+func (s *StackActionTestSuite) TestLoadYamlOptional_WithTemplatingFromFile() {
+	os.Setenv("FOO", "bar")
+
+	content := `key: {{ .Env.FOO }}`
+	tmpFile := s.writeTempFile("stack", content)
+	os.Setenv("INPUT_STACK_FILE", tmpFile)
+
+	result, err := loadYamlOptional("STACK")
+	s.NoError(err)
+	s.Equal("bar", result["key"])
+}
+
+func (s *StackActionTestSuite) TestLoadYamlOptional_WithTemplatingFromInline() {
+	os.Setenv("FOO", "bar")
+	os.Setenv("INPUT_STACK_YAML", `key: {{ .Env.FOO }}`)
+
+	result, err := loadYamlOptional("STACK")
+	s.NoError(err)
+	s.Equal("bar", result["key"])
+}
+
+func (s *StackActionTestSuite) TestLoadYamlOptional_FailsWithBadTemplate() {
+	os.Setenv("INPUT_STACK_YAML", `key: {{ .Env.`)
+
+	_, err := loadYamlOptional("STACK")
+	s.Error(err)
+	s.Contains(err.Error(), "template")
 }
 
 func (s *StackActionTestSuite) TestMustEnv_Present() {
