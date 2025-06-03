@@ -21,6 +21,7 @@ lint: dep
     		-v ${CURDIR}:/app \
     		-v $(HOME)/.cache:/home/mittwald-golangci/.cache \
     		-w /app \
+    		-e LINT_ID=$$(id -u $$WHOAMI) \
     		-e GOFLAGS="-buildvcs=false" \
     		-e GOLANGCI_ADDITIONAL_YML="/app/build/ci/.golangci.yml" \
     		quay.io/mittwald/golangci-lint:$(GOLANGCI_VERSION) \
