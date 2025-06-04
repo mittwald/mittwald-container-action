@@ -1,6 +1,6 @@
-name: 'mittwald. mStudio container-action'
+name: 'mittwald mStudio container deployment'
 description: 'Update a mStudio container stack using the official API client and a YAML-based configuration'
-author: 'mittwald.'
+author: 'mittwald'
 
 branding:
   icon: 'grid'
@@ -12,10 +12,15 @@ runs:
 
 inputs:
   api_token:
-    description: 'mStudio API token'
+    description: >
+      An mStudio API token. See https://developer.mittwald.de/docs/v2/api/intro/
+      on how to obtain an API token.
     required: true
   stack_id:
-    description: 'Stack ID to update'
+    description: >
+      The ID of the mStudio container stack to deploy. See
+      https://developer.mittwald.de/docs/v2/api/howtos/create-container/
+      on how to determine this ID.
     required: true
 
   stack_yaml:

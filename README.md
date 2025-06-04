@@ -4,7 +4,8 @@ This GitHub Action updates a [mittwald](https://mittwald.de) container stack via
 
 It supports flexible configuration using YAML files or inline YAML strings and includes support for templating using environment variables.
 
-> ⚠️ Disclaimer: This action is still under active development. Bugs or breaking changes may occur — please test carefully before production use.
+> [!WARNING]
+> This action is still under active development. Bugs or breaking changes may occur — please test carefully before production use.
 
 ---
 
@@ -18,9 +19,8 @@ It supports flexible configuration using YAML files or inline YAML strings and i
   - inline YAML via action `with:` parameters
 - Supports environment variable templating in YAML (`{{ .Env.MY_VAR }}`)
 
----
-
-> ⚠️ **Important Note about the Studio API**
+> [!IMPORTANT]
+> **Note about the mStudio API**
 >
 > This action uses the `UpdateStack` endpoint of the [mittwald Studio Container API](https://developer.mittwald.de/docs/v2/reference/container).
 >
@@ -29,8 +29,6 @@ It supports flexible configuration using YAML files or inline YAML strings and i
 > 🧨 **Any manual changes made in the mStudio UI that are not reflected in your YAML configuration will be overwritten!**
 >
 > If you need to preserve manual adjustments, make sure to incorporate them into your version-controlled YAML files before deploying.
-
----
 
 ## 🚀 Usage
 
@@ -63,8 +61,6 @@ jobs:
           stack_file: "${{ github.workspace }}/configs/stack.yaml"
 ```
 
----
-
 ### 🧪 Example: Full stack file (`stack.yaml`)
 
 ```yaml
@@ -87,7 +83,8 @@ volumes:
     name: mydb-volume
 ```
 
-ℹ️ Templating: The placeholders like `{{ .Env.MYSQL_ROOT_PASSWORD }}` will be replaced using the environment variables at runtime.
+> [!TIP]
+> The placeholders like `{{ .Env.MYSQL_ROOT_PASSWORD }}` will be replaced using the environment variables at runtime.
 
 You must provide these variables in the workflow's `env` block if they are used in your stack file:
 
@@ -99,8 +96,6 @@ env:
   MYSQL_PASSWORD: "secret"
 ```
 
----
-
 ### 🧪 Example: Separate `services.yaml` and `volumes.yaml`
 
 ```yaml
@@ -110,8 +105,6 @@ with:
   services_file: "${{ github.workspace }}/configs/services.yaml"
   volumes_file: "${{ github.workspace }}/configs/volumes.yaml"
 ```
-
----
 
 ### 🧪 Example: Inline YAML in workflow
 
@@ -127,14 +120,12 @@ with:
         - "80/tcp"
 ```
 
----
-
 ## ⚙️ Inputs
 
 | Name                        | Required | Description                                  |
 |-----------------------------|----------|----------------------------------------------|
-| `api_token`                 | ✅       | Mittwald API token                           |
-| `stack_id`                  | ✅       | Stack UUID to update                         |
+| `api_token`                 | ✅       | Mittwald API token; see [the documentation](https://developer.mittwald.de/docs/v2/api/intro/) on how to obtain one. |
+| `stack_id`                  | ✅       | Stack UUID to update. See the documentation on [managing containers via the API](https://developer.mittwald.de/docs/v2/api/howtos/create-container/) to learn how to determine this id. |
 | `stack_yaml` / `stack_file`        | 🔄       | Full stack (services + volumes) YAML         |
 | `services_yaml` / `services_file`  | 🔄       | Services-only YAML                           |
 | `volumes_yaml` / `volumes_file`    | 🔄       | Volumes-only YAML                            |
@@ -158,8 +149,6 @@ To make this work, you must define the variables in your workflow under the `env
 env:
   MONGODB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 ```
-
----
 
 ## 🧪 Full Example with Secret Templating
 
@@ -190,19 +179,13 @@ jobs:
           stack_file: "${{ github.workspace }}/configs/mstudio/container_stack.yaml"
 ```
 
----
-
 ## 📁 Examples
 
 Several full example files are provided under the `examples/` directory in this repository.
 
----
-
 ## 🛠 Development
 
 This action is written in Go and uses the official [mittwald/api-client-go](https://github.com/mittwald/api-client-go) SDK (v2). See `main.go` for details.
-
----
 
 ## 🤝 Contributing
 
