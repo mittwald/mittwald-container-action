@@ -138,11 +138,11 @@ volumes:
 	s.NotNil(stack)
 
 	s.Contains(stack.Services, "app")
-	s.Equal("nginx", stack.Services["app"].Image)
-	s.Equal("test app", stack.Services["app"].Description)
+	s.Equal("nginx", *stack.Services["app"].Image)
+	s.Equal("test app", *stack.Services["app"].Description)
 	s.Contains(stack.Services["app"].Ports, "80:80/tcp")
 	s.Contains(stack.Volumes, "data")
-	s.Equal("app-volume", stack.Volumes["data"].Name)
+	s.Equal("app-volume", *stack.Volumes["data"].Name)
 
 	for _, svc := range stack.Services {
 		s.NoError(svc.Validate())
@@ -174,11 +174,11 @@ data:
 	s.NotNil(stack)
 
 	s.Contains(stack.Services, "app")
-	s.Equal("nginx", stack.Services["app"].Image)
-	s.Equal("test app", stack.Services["app"].Description)
+	s.Equal("nginx", *stack.Services["app"].Image)
+	s.Equal("test app", *stack.Services["app"].Description)
 	s.Contains(stack.Services["app"].Ports, "80:80/tcp")
 	s.Contains(stack.Volumes, "data")
-	s.Equal("app-volume", stack.Volumes["data"].Name)
+	s.Equal("app-volume", *stack.Volumes["data"].Name)
 
 	for _, svc := range stack.Services {
 		s.NoError(svc.Validate())
@@ -216,11 +216,11 @@ volumes:
 	s.NotNil(stack)
 
 	s.Contains(stack.Services, "app")
-	s.Equal("nginx", stack.Services["app"].Image)
-	s.Equal("test app", stack.Services["app"].Description)
+	s.Equal("nginx", *stack.Services["app"].Image)
+	s.Equal("test app", *stack.Services["app"].Description)
 	s.Contains(stack.Services["app"].Ports, "80:80/tcp")
 	s.Contains(stack.Volumes, "data")
-	s.Equal("app-volume", stack.Volumes["data"].Name)
+	s.Equal("app-volume", *stack.Volumes["data"].Name)
 
 	for _, svc := range stack.Services {
 		s.NoError(svc.Validate())
@@ -253,11 +253,11 @@ data:
 	s.NotNil(stack)
 
 	s.Contains(stack.Services, "app")
-	s.Equal("nginx", stack.Services["app"].Image)
-	s.Equal("test app", stack.Services["app"].Description)
+	s.Equal("nginx", *stack.Services["app"].Image)
+	s.Equal("test app", *stack.Services["app"].Description)
 	s.Contains(stack.Services["app"].Ports, "80:80/tcp")
 	s.Contains(stack.Volumes, "data")
-	s.Equal("app-volume", stack.Volumes["data"].Name)
+	s.Equal("app-volume", *stack.Volumes["data"].Name)
 
 	for _, svc := range stack.Services {
 		s.NoError(svc.Validate())
