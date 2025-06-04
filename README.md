@@ -4,7 +4,8 @@ This GitHub Action updates a [mittwald](https://mittwald.de) container stack via
 
 It supports flexible configuration using YAML files or inline YAML strings and includes support for templating using environment variables.
 
-> ⚠️ Disclaimer: This action is still under active development. Bugs or breaking changes may occur — please test carefully before production use.
+> [!WARNING]
+> This action is still under active development. Bugs or breaking changes may occur — please test carefully before production use.
 
 ---
 
@@ -18,9 +19,8 @@ It supports flexible configuration using YAML files or inline YAML strings and i
   - inline YAML via action `with:` parameters
 - Supports environment variable templating in YAML (`{{ .Env.MY_VAR }}`)
 
----
-
-> ⚠️ **Important Note about the Studio API**
+> [!IMPORTANT]
+> **Note about the mStudio API**
 >
 > This action uses the `UpdateStack` endpoint of the [mittwald Studio Container API](https://developer.mittwald.de/docs/v2/reference/container).
 >
@@ -29,8 +29,6 @@ It supports flexible configuration using YAML files or inline YAML strings and i
 > 🧨 **Any manual changes made in the mStudio UI that are not reflected in your YAML configuration will be overwritten!**
 >
 > If you need to preserve manual adjustments, make sure to incorporate them into your version-controlled YAML files before deploying.
-
----
 
 ## 🚀 Usage
 
@@ -62,8 +60,6 @@ jobs:
           stack_id: "your-stack-id"
           stack_file: "${{ github.workspace }}/configs/stack.yaml"
 ```
-
----
 
 ### 🧪 Example: Full stack file (`stack.yaml`)
 
@@ -99,8 +95,6 @@ env:
   MYSQL_PASSWORD: "secret"
 ```
 
----
-
 ### 🧪 Example: Separate `services.yaml` and `volumes.yaml`
 
 ```yaml
@@ -126,8 +120,6 @@ with:
       ports:
         - "80/tcp"
 ```
-
----
 
 ## ⚙️ Inputs
 
@@ -159,8 +151,6 @@ env:
   MONGODB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 ```
 
----
-
 ## 🧪 Full Example with Secret Templating
 
 ```yaml
@@ -190,19 +180,13 @@ jobs:
           stack_file: "${{ github.workspace }}/configs/mstudio/container_stack.yaml"
 ```
 
----
-
 ## 📁 Examples
 
 Several full example files are provided under the `examples/` directory in this repository.
 
----
-
 ## 🛠 Development
 
 This action is written in Go and uses the official [mittwald/api-client-go](https://github.com/mittwald/api-client-go) SDK (v2). See `main.go` for details.
-
----
 
 ## 🤝 Contributing
 
