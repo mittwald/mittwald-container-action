@@ -11,7 +11,7 @@ It supports flexible configuration using YAML files or inline YAML strings and i
 ## 🔧 Features
 
 - Authentication using Mittwald API tokens
-- Updates full container stacks using `DeclareStack`
+- Updates full container stacks using `UpdateStack`
 - Supports stack configuration via:
   - single `stack.yaml` (services + volumes)
   - separate `services.yaml` and `volumes.yaml`
@@ -22,9 +22,9 @@ It supports flexible configuration using YAML files or inline YAML strings and i
 
 > ⚠️ **Important Note about the Studio API**
 >
-> This action uses the `DeclareStack` endpoint of the [mittwald Studio Container API](https://developer.mittwald.de/docs/v2/reference/container).
+> This action uses the `UpdateStack` endpoint of the [mittwald Studio Container API](https://developer.mittwald.de/docs/v2/reference/container).
 >
-> This means **the entire stack is declared exactly as described in your YAML file** – including services, ports, volumes, and environment variables.
+> This means **every service in your stack is declared exactly as described in your YAML file** – including ports, volumes, and environment variables.
 >
 > 🧨 **Any manual changes made in the mStudio UI that are not reflected in your YAML configuration will be overwritten!**
 >
