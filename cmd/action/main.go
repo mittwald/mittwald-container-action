@@ -44,13 +44,13 @@ func main() {
 	}
 
 	// Construct the API request to declare the stack
-	req := containerclientv2.DeclareStackRequest{
+	req := containerclientv2.UpdateStackRequest{
 		Body:    *stackData,
 		StackID: stackID,
 	}
 
 	// Call the API — this overrides the stack with the full state from YAML
-	_, httpResponse, declareStackErr := client.Container().DeclareStack(ctx, req)
+	_, httpResponse, declareStackErr := client.Container().UpdateStack(ctx, req)
 	if declareStackErr != nil {
 		slog.With(slog.Any("error", declareStackErr)).Error("❌ failure while declaring stack")
 
@@ -68,7 +68,7 @@ func main() {
 
 // loadStackData determines whether a full stack definition or a services/volumes split was provided.
 // It then parses the input into a struct that matches the API's expected payload.
-func loadStackData() (*containerclientv2.DeclareStackRequestBody, error) {
+func loadStackData() (*containerclientv2.UpdateStackRequestBody, error) {
 	stack, loadStackErr := loadYamlOptional("STACK")
 	if loadStackErr != nil {
 		return nil, loadStackErr
@@ -95,13 +95,13 @@ func loadStackData() (*containerclientv2.DeclareStackRequestBody, error) {
 }
 
 // parseStackObject marshals and unmarshals YAML-parsed data into a typed SDK struct.
-func parseStackObject(raw map[string]interface{}) (*containerclientv2.DeclareStackRequestBody, error) {
+func parseStackObject(raw map[string]interface{}) (*containerclientv2.UpdateStackRequestBody, error) {
 	data, marshalErr := json.Marshal(raw)
 	if marshalErr != nil {
 		return nil, errors.Wrap(marshalErr, "failed to marshal inputs")
 	}
 
-	var stack containerclientv2.DeclareStackRequestBody
+	var stack containerclientv2.UpdateStackRequestBody
 	if unmarshalErr := json.Unmarshal(data, &stack); unmarshalErr != nil {
 		return nil, errors.Wrap(unmarshalErr, "failure while unmarshalling inputs to declareStackRequestBody")
 	}
