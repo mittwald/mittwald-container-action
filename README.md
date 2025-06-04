@@ -83,7 +83,8 @@ volumes:
     name: mydb-volume
 ```
 
-ℹ️ Templating: The placeholders like `{{ .Env.MYSQL_ROOT_PASSWORD }}` will be replaced using the environment variables at runtime.
+> [!TIP]
+> The placeholders like `{{ .Env.MYSQL_ROOT_PASSWORD }}` will be replaced using the environment variables at runtime.
 
 You must provide these variables in the workflow's `env` block if they are used in your stack file:
 
@@ -105,8 +106,6 @@ with:
   volumes_file: "${{ github.workspace }}/configs/volumes.yaml"
 ```
 
----
-
 ### 🧪 Example: Inline YAML in workflow
 
 ```yaml
@@ -125,8 +124,8 @@ with:
 
 | Name                        | Required | Description                                  |
 |-----------------------------|----------|----------------------------------------------|
-| `api_token`                 | ✅       | Mittwald API token                           |
-| `stack_id`                  | ✅       | Stack UUID to update                         |
+| `api_token`                 | ✅       | Mittwald API token; see [the documentation](https://developer.mittwald.de/docs/v2/api/intro/) on how to obtain one. |
+| `stack_id`                  | ✅       | Stack UUID to update. See the documentation on [managing containers via the API](https://developer.mittwald.de/docs/v2/api/howtos/create-container/) to learn how to determine this id. |
 | `stack_yaml` / `stack_file`        | 🔄       | Full stack (services + volumes) YAML         |
 | `services_yaml` / `services_file`  | 🔄       | Services-only YAML                           |
 | `volumes_yaml` / `volumes_file`    | 🔄       | Volumes-only YAML                            |
