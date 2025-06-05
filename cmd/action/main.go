@@ -10,6 +10,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/mittwald/api-client-go/mittwaldv2/generated/schemas/containerv2"
 	"github.com/pkg/errors"
 
 	"github.com/mittwald/api-client-go/mittwaldv2"
@@ -17,16 +18,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+//nolint:cyclop // since the main.go holds the whole logic of this action cyclop is ok
 func main() {
 	// Required: Mittwald API token and stack ID must be provided via GitHub Action inputs
 	apiToken := mustEnv("INPUT_API_TOKEN")
 	stackID := mustEnv("INPUT_STACK_ID")
 	ctx := context.Background()
 
-	// Initialize mittwald API client with access token
-	client, createClientErr := mittwaldv2.New(ctx, mittwaldv2.WithAccessToken(apiToken))
+	// Initialize mittwald API apiClient with access token
+	apiClient, createClientErr := mittwaldv2.New(ctx, mittwaldv2.WithAccessToken(apiToken))
 	if createClientErr != nil {
-		slog.Error("error creating mittwaldv2 client")
+		slog.Error("error creating mittwaldv2 apiClient")
 		panic(createClientErr)
 	}
 
@@ -50,20 +52,52 @@ func main() {
 	}
 
 	// Call the API — this overrides the stack with the full state from YAML
-	_, httpResponse, declareStackErr := client.Container().UpdateStack(ctx, req)
-	if declareStackErr != nil {
-		slog.With(slog.Any("error", declareStackErr)).Error("❌ failure while declaring stack")
+	updateStackResponse, updateStackHTTPResponse, updateStackErr := apiClient.Container().UpdateStack(ctx, req)
+	if updateStackErr != nil {
+		slog.With(slog.Any("error", updateStackErr)).Error("❌ failure while updating stack")
 
 		// If available, dump the raw HTTP body for diagnostics
-		plainHttpResponse, plainHttpResponseErr := io.ReadAll(httpResponse.Body)
-		if plainHttpResponseErr == nil {
-			slog.With(slog.Any("response", string(plainHttpResponse))).Error("🔎 http-response")
+		plainHTTPResponse, plainTTPResponseErr := io.ReadAll(updateStackHTTPResponse.Body)
+		if plainTTPResponseErr == nil {
+			slog.With(slog.Any("response", string(plainHTTPResponse))).Error("🔎 http-response")
 		}
 
-		panic(declareStackErr)
+		panic(updateStackErr)
 	}
 
 	slog.Info("✅ Stack updated successfully")
+
+	servicesToRecreateMap := loadServicesToRecreate(stackData.Services)
+	for _, svc := range updateStackResponse.Services {
+		if _, shouldRecreate := servicesToRecreateMap[svc.ServiceName]; !shouldRecreate {
+			slog.With("service", svc.ServiceName).Info("⏭ Skipping recreation for service")
+			continue
+		}
+
+		slog.With("service", svc.ServiceName).Info("🔁 Recreating service")
+
+		recreateServicesRequest := containerclientv2.RecreateServiceRequest{
+			StackID:   stackID,
+			ServiceID: svc.Id,
+		}
+
+		recreateServiceHTTPResponse, recreateServiceErr := apiClient.Container().RecreateService(ctx, recreateServicesRequest)
+		if recreateServiceErr != nil {
+			slog.With(slog.Any("error", recreateServiceErr)).With(slog.Any("service", svc.ServiceName)).
+				Error("❌ Failure while recreating service")
+
+			if recreateServiceHTTPResponse != nil {
+				plainHTTPResponse, plainHTTPResponseErr := io.ReadAll(recreateServiceHTTPResponse.Body)
+				if plainHTTPResponseErr == nil {
+					slog.With("response", string(plainHTTPResponse)).Error("🔎 HTTP response body")
+				}
+			}
+
+			continue
+		}
+
+		slog.With("service", svc.ServiceName).Info("✅ Service recreated successfully")
+	}
 }
 
 // loadStackData determines whether a full stack definition or a services/volumes split was provided.
@@ -111,6 +145,8 @@ func parseStackObject(raw map[string]interface{}) (*containerclientv2.UpdateStac
 
 // loadYamlOptional attempts to load a YAML config from either a _FILE or _YAML input.
 // If both are missing, it returns nil.
+//
+//nolint:nilnil // suppress nilnil linter
 func loadYamlOptional(name string) (map[string]interface{}, error) {
 	file := os.Getenv("INPUT_" + name + "_FILE")
 	raw := os.Getenv("INPUT_" + name + "_YAML")
@@ -171,6 +207,8 @@ func mustEnv(key string) string {
 
 // renderConfigTemplate renders a Go text/template using environment variables as input.
 // Template variables can be accessed using {{ .Env.VARNAME }} syntax.
+//
+//nolint:mnd // suppress magic number linter complaining about env-separator
 func renderConfigTemplate(configTemplate *template.Template) (*bytes.Buffer, error) {
 	type templateData struct {
 		Env map[string]string
@@ -196,4 +234,36 @@ func renderConfigTemplate(configTemplate *template.Template) (*bytes.Buffer, err
 	}
 
 	return renderedCfg, nil
+}
+
+// loadServicesToRecreate builds a set of services to be restarted after the stack update.
+// It compares the list of services defined in the stack config with a user-supplied
+// comma-separated skip list (via INPUT_SKIP_RECREATION).
+func loadServicesToRecreate(patchServicesRequest map[string]containerv2.ServiceRequest) map[string]struct{} {
+	skipRecreationForServicesInput := os.Getenv("INPUT_SKIP_RECREATION")
+	serviceSeperator := ","
+
+	if skipRecreationForServicesInput == "" {
+		serviceSeperator = "" // prevents strings.Split() from returning [""] if input is empty
+	}
+
+	// Build a set of services to skip
+	skipRecreationForServicesList := strings.Split(skipRecreationForServicesInput, serviceSeperator)
+	skipRecreationForServicesMap := make(map[string]struct{}, len(skipRecreationForServicesList))
+	for _, serviceName := range skipRecreationForServicesList {
+		serviceName = strings.TrimSpace(serviceName)
+		if serviceName != "" {
+			skipRecreationForServicesMap[serviceName] = struct{}{}
+		}
+	}
+
+	// Include all services from the config, except those explicitly skipped
+	servicesToRecreate := make(map[string]struct{}, len(patchServicesRequest))
+	for serviceName := range patchServicesRequest {
+		if _, skip := skipRecreationForServicesMap[serviceName]; !skip {
+			servicesToRecreate[serviceName] = struct{}{}
+		}
+	}
+
+	return servicesToRecreate
 }

@@ -129,8 +129,28 @@ with:
 | `stack_yaml` / `stack_file`        | 🔄       | Full stack (services + volumes) YAML         |
 | `services_yaml` / `services_file`  | 🔄       | Services-only YAML                           |
 | `volumes_yaml` / `volumes_file`    | 🔄       | Volumes-only YAML                            |
+| `skip_recreation`           | ❌       | Comma-separated list of services that should **not** be restarted after the stack was updated. Useful to avoid downtime for persistent services. |
 
 ---
+
+## 🔁 Selective Service Recreation
+
+After a stack is updated, services can optionally be restarted using the `RecreateService` API.  
+By default, **all services will be restarted**, unless you explicitly tell the action to skip specific ones.
+
+Use the `skip_recreation` input to provide a comma-separated list of service names **not** to restart:
+
+```yaml
+with:
+  skip_recreation: "mongodb,mongoexpress"
+```
+
+This is especially useful if you're managing a database or persistent service that shouldn't be restarted on every deployment.
+
+If you want to restart all services, simply omit this input.
+
+> [!TIP]
+> Service names must match the ones defined under `services:` in your YAML.
 
 ## 🧩 Environment Variable Parsing
 
@@ -177,6 +197,7 @@ jobs:
           api_token: ${{ secrets.MITTWALD_API_TOKEN }}
           stack_id: "your-stack-id"
           stack_file: "${{ github.workspace }}/configs/mstudio/container_stack.yaml"
+          skip_recreation: "mongodb"
 ```
 
 ## 📁 Examples

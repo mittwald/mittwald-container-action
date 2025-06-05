@@ -23,6 +23,11 @@ inputs:
       on how to determine this ID.
     required: true
 
+  skip_recreation:
+    description: >
+      Comma-separated list of services that should NOT be recreated after patching the stack
+    required: false
+
   stack_yaml:
     description: 'Multiline YAML containing both services and volumes'
     required: false

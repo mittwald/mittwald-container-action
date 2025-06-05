@@ -126,7 +126,7 @@ services:
     image: nginx
     description: test app
     ports:
-      - "80:80/tcp"
+      - "80/tcp"
 volumes:
   data:
     name: app-volume
@@ -140,7 +140,7 @@ volumes:
 	s.Contains(stack.Services, "app")
 	s.Equal("nginx", *stack.Services["app"].Image)
 	s.Equal("test app", *stack.Services["app"].Description)
-	s.Contains(stack.Services["app"].Ports, "80:80/tcp")
+	s.Contains(stack.Services["app"].Ports, "80/tcp")
 	s.Contains(stack.Volumes, "data")
 	s.Equal("app-volume", *stack.Volumes["data"].Name)
 
@@ -159,7 +159,7 @@ app:
   image: nginx
   description: test app
   ports:
-    - "80:80/tcp"
+    - "80/tcp"
 `,
 	)
 	os.Setenv(
@@ -176,7 +176,7 @@ data:
 	s.Contains(stack.Services, "app")
 	s.Equal("nginx", *stack.Services["app"].Image)
 	s.Equal("test app", *stack.Services["app"].Description)
-	s.Contains(stack.Services["app"].Ports, "80:80/tcp")
+	s.Contains(stack.Services["app"].Ports, "80/tcp")
 	s.Contains(stack.Volumes, "data")
 	s.Equal("app-volume", *stack.Volumes["data"].Name)
 
@@ -203,7 +203,7 @@ services:
     image: nginx
     description: test app
     ports:
-      - "80:80/tcp"
+      - "80/tcp"
 volumes:
   data:
     name: app-volume
@@ -218,7 +218,7 @@ volumes:
 	s.Contains(stack.Services, "app")
 	s.Equal("nginx", *stack.Services["app"].Image)
 	s.Equal("test app", *stack.Services["app"].Description)
-	s.Contains(stack.Services["app"].Ports, "80:80/tcp")
+	s.Contains(stack.Services["app"].Ports, "80/tcp")
 	s.Contains(stack.Volumes, "data")
 	s.Equal("app-volume", *stack.Volumes["data"].Name)
 
@@ -236,7 +236,7 @@ app:
   image: nginx
   description: test app
   ports:
-    - "80:80/tcp"
+    - "80/tcp"
 `
 	volumeContent := `
 data:
@@ -255,7 +255,7 @@ data:
 	s.Contains(stack.Services, "app")
 	s.Equal("nginx", *stack.Services["app"].Image)
 	s.Equal("test app", *stack.Services["app"].Description)
-	s.Contains(stack.Services["app"].Ports, "80:80/tcp")
+	s.Contains(stack.Services["app"].Ports, "80/tcp")
 	s.Contains(stack.Volumes, "data")
 	s.Equal("app-volume", *stack.Volumes["data"].Name)
 
@@ -275,6 +275,96 @@ func (s *StackActionTestSuite) TestLoadStackData_FromInvalidFile() {
 	_, err := loadStackData()
 	s.Error(err)
 	s.Contains(err.Error(), "unmarshal")
+}
+
+func (s *StackActionTestSuite) TestLoadServicesToRecreate_EmptyList() {
+	os.Setenv(
+		"INPUT_STACK_YAML", `
+services:
+  app:
+    image: nginx
+    description: test app
+    ports:
+      - "80/tcp"
+volumes:
+  data:
+    name: app-volume
+`,
+	)
+
+	stack, err := loadStackData()
+	s.NoError(err)
+	s.NotNil(stack)
+
+	servicesToRecreate := loadServicesToRecreate(stack.Services)
+	s.Len(servicesToRecreate, 1)
+	_, found := servicesToRecreate["app"]
+	s.True(found)
+}
+
+func (s *StackActionTestSuite) TestLoadServicesToRecreate_WithOneEntry() {
+	os.Setenv(
+		"INPUT_STACK_YAML", `
+services:
+  app:
+    image: nginx
+    description: test app
+    ports:
+      - "80/tcp"
+  db:
+    image: mysql
+    description: test mysql
+    ports:
+      - "3306/tcp"
+`,
+	)
+
+	os.Setenv("INPUT_SKIP_RECREATION", "db")
+
+	stack, err := loadStackData()
+	s.NoError(err)
+	s.NotNil(stack)
+
+	servicesToRecreate := loadServicesToRecreate(stack.Services)
+	s.Len(servicesToRecreate, 1)
+
+	_, found := servicesToRecreate["app"]
+	s.True(found)
+}
+
+func (s *StackActionTestSuite) TestLoadServicesToRecreate_WithMultipleEntries() {
+	os.Setenv(
+		"INPUT_STACK_YAML", `
+services:
+  app:
+    image: nginx
+    description: test app
+    ports:
+      - "80/tcp"
+  db:
+    image: mysql
+    description: test mysql
+    ports:
+      - "3306/tcp"
+  redis:
+    image: redis
+    description: test redis
+    ports:
+      - "6379/tcp"
+`,
+	)
+
+	os.Setenv("INPUT_SKIP_RECREATION", "db,redis")
+
+	stack, err := loadStackData()
+	s.NoError(err)
+	s.NotNil(stack)
+
+	servicesToRecreate := loadServicesToRecreate(stack.Services)
+	s.Len(servicesToRecreate, 1)
+	
+	_, found := servicesToRecreate["app"]
+	s.True(found)
 }
 
 func TestStackActionTestSuite(t *testing.T) {
