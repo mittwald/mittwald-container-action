@@ -69,6 +69,11 @@ func main() {
 
 	servicesToRecreateMap := loadServicesToRecreate(stackData.Services)
 	for _, svc := range updateStackResponse.Services {
+		if !svc.RequiresRecreate {
+			slog.With("service", svc.ServiceName).Info("⏭ Service does not require recreation")
+			continue
+		}
+
 		if _, shouldRecreate := servicesToRecreateMap[svc.ServiceName]; !shouldRecreate {
 			slog.With("service", svc.ServiceName).Info("⏭ Skipping recreation for service")
 			continue
