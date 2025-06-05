@@ -142,7 +142,7 @@ Use the `skip_recreation` input to provide a comma-separated list of service nam
 
 ```yaml
 with:
-  skip_recreation: "mongodb,mongoexpress"
+  skip_recreation: "mongodb"
 ```
 
 This is especially useful if you're managing a database or persistent service that shouldn't be restarted on every deployment.

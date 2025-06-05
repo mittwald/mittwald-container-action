@@ -362,7 +362,7 @@ services:
 
 	servicesToRecreate := loadServicesToRecreate(stack.Services)
 	s.Len(servicesToRecreate, 1)
-	
+
 	_, found := servicesToRecreate["app"]
 	s.True(found)
 }
