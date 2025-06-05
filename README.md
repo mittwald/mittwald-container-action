@@ -149,6 +149,10 @@ This is especially useful if you're managing a database or persistent service th
 
 If you want to restart all services, simply omit this input.
 
+> [!NOTE]
+> Services are only restarted if the response from the `UpdateStack` API indicates that a restart is required.  
+> This means that even if a service is **not** in the `skip_recreation` list, it will only be restarted if the stack update included relevant changes.
+
 > [!TIP]
 > Service names must match the ones defined under `services:` in your YAML.
 
