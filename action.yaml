@@ -3,7 +3,7 @@ description: 'Update a mStudio container stack using the official API client and
 author: 'mittwald'
 
 branding:
-  icon: 'grid'
+  icon: 'upload-cloud'
   color: 'blue'
 
 runs:
