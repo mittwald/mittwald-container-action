@@ -4,9 +4,6 @@ This GitHub Action updates a [mittwald](https://mittwald.de) container stack via
 
 It supports flexible configuration using YAML files or inline YAML strings and includes support for templating using environment variables.
 
-> [!WARNING]
-> This action is still under active development. Bugs or breaking changes may occur — please test carefully before production use.
-
 ---
 
 ## 🔧 Features
